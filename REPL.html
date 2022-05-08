@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>PyScript - REPL</title>
+    <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
+    <link rel="stylesheet"
+      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/default.min.css">
+
+    <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+
+    <py-env>
+- numpy
+- pandas
+- matplotlib
+- paths:
+    - /students.csv
+    - /occupancy.csv
+    </py-env>
+</head>
+<body>
+    <h1 class="text-center">
+        PyScript REPL
+    </h1>
+    <p class="text-center">
+        Tip: <b>Press Shift-ENTER to evaluate a cell.</b>
+    </p>
+    <div style="margin-top: 30px;">
+        <p style="margin: 30px 0 0 30px;">
+            <ul style="margin-left: 30px;">
+                <li>Case 1: Print something using <code>print(text)</code></li>
+                <pre>
+                    <code class="language-python">
+# case 1
+print("Hello World!")
+                    </code>
+                </pre>
+                <div class="repl">
+                    <py-repl id="repl-1" auto-generate="true"></py-repl>
+                </div>
+                
+                <li>Case 2: Import python package/module, such as <code>random</code></li>
+                <pre>
+                    <code class="language-python">
+# case 2
+import random
+
+random_number = random.randint(1, 100)
+print(random_number)
+                    </code>
+                </pre>
+                <div class="repl">
+                    <py-repl id="repl-2" auto-generate="true"></py-repl>
+                </div>
+                <li>Case 3: Import data science module, such as <code>numpy,pandas,etc.</code></li>
+                <pre>
+                    <code class="language-python">
+# case 3a: creating dataframe
+import numpy as np
+import pandas as pd
+
+days = ['2022-05-01', '2022-05-02', '2022-05-03', '2022-05-04', '2022-05-05']
+weathers = [31.3, 30.5, np.nan, 28.43, 23.1]
+statutes = ['HOT', 'HOT', 'Undefined', 'WARM', 'COOL']
+
+weather_df = pd.DataFrame({ 'day': days, 'weather': weathers, 'status': statutes })
+weather_df
+
+# case 3b: reading csv from csv file
+student_df = pd.read_csv("./students.csv")
+student_df
+                    </code>
+                </pre>
+                <div class="repl">
+                    <py-repl id="repl-3" auto-generate="true"></py-repl>
+                </div>
+                <li>Case 4: Using <code>panel</code> for advanced utility</li>
+                <pre>
+                    <code class="language-python">
+# case 4: taken from https://panel.holoviz.org/getting_started/
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+from pyodide.http import open_url
+
+url = 'https://raw.githubusercontent.com/holoviz/panel/master/examples/assets/occupancy.csv'
+data = pd.read_csv(open_url(url))
+data['date'] = data.date.astype('datetime64[ns]')
+data = data.set_index('date')
+data.tail()
+
+# create functions to smooths a time series and plots it using matplotlib with outliers highlighted
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_agg import FigureCanvas
+
+def mpl_plot(avg, highlight):
+    fig = Figure()
+    FigureCanvas(fig) # not needed in mpl >= 3.1
+    ax = fig.add_subplot()
+    avg.plot(ax=ax)
+    if len(highlight): highlight.plot(style='o', ax=ax)
+    return fig
+
+def find_outliers(variable='Temperature', window=30, sigma=10, view_fn=mpl_plot):
+    avg = data[variable].rolling(window=window).mean()
+    residual = data[variable] - avg
+    std = residual.rolling(window=window).std()
+    outliers = (np.abs(residual) > std * sigma)
+    return view_fn(avg, avg[outliers])
+
+# call the function
+find_outliers(variable='Temperature', window=20, sigma=10)
+                    </code>
+                </pre>
+                <div class="repl">
+                    <py-repl id="repl-4" auto-generate="true"></py-repl>
+                </div>
+            </ul>
+        </p>
+    </div>
+</body>
+</html>
